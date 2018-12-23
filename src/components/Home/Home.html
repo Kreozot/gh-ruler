@@ -1,0 +1,283 @@
+<div>
+	<div class="top">
+		<div class="logo"></div>
+		<input
+			class="input"
+			ref:slugInput
+			on:enter="add(this.value)"
+			placeholder="GitHub repository owner/name"
+			autofocus
+		>
+	</div>
+	<div class="table">
+		<div class="header">
+			<div class="cell">
+				Repository
+			</div>
+			<div class="cell">
+				Last update
+			</div>
+			<div class="cell">
+				Stars
+			</div>
+			<div class="cell">
+				Open issues
+			</div>
+			<div class="cell">
+				Closed issues
+			</div>
+			<div class="cell">
+				Open PRs
+			</div>
+			<div class="cell">
+				Merged PRs
+			</div>
+		</div>
+
+		{#each $repos as repo, i}
+			<RepoInfo repo={ repo } index={ i }/>
+		{/each}
+
+	</div>
+
+	<div class="footer">
+		<button
+			on:click="clear()"
+			title="Remove all items from this comparison"
+			disabled={ !$repos.length }
+		>
+			Clear
+		</button>
+		<button
+			on:click="generateUrl()"
+			title="Generate URL to share this comparison"
+		>
+			Get URL
+		</button>
+		{#if url}
+			<div class="url-section">
+				<input
+					ref:urlInput
+					on:focus="selectUrl()"
+					on:blur="resetUrl()"
+					value={ url }
+				>
+				<button
+					on:click="copyUrl()"
+					title="Copy URL to clipboard"
+					class="clipboard"
+				>
+				</button>
+			</div>
+		{/if}
+	</div>
+</div>
+
+<style>
+	.top {
+		margin-bottom: 10px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+
+	.logo {
+		position: relative;
+		width: 100px;
+		height: 100px;
+		background: url('./logo100.png') 50% 50% no-repeat;
+		margin-bottom: 20px;
+	}
+
+	.input {
+		width: 300px;
+	}
+
+	.footer {
+		margin-top: 10px;
+		display: inline-grid;
+		grid-column-gap: 10px;
+		grid-template-columns: auto auto auto;
+	}
+
+	.url-section {
+		display: flex;
+		align-items: center;
+	}
+
+	.table {
+		display: table;
+		max-width: 100%;
+	}
+
+	.header {
+		display: table-row;
+		background-color: aliceblue;
+	}
+
+	.cell {
+		display: table-cell;
+		padding: 10px;
+	}
+
+	.clipboard {
+		display: inline-block;
+		border: none;
+		padding: 12px;
+		width: 16px;
+		height: 16px;
+		background: url('./clipboard-icon.svg') 50% 50% no-repeat;
+		background-size: 70%;
+		cursor: pointer;
+	}
+
+	.clipboard:hover, .clipboard:focus {
+		background-color: rgb(200, 255, 200);
+	}
+
+	@media (max-width: 760px) {
+		.header {
+			display: none;
+		}
+
+		.table, .cell {
+			display: block;
+		}
+	}
+</style>
+
+<script>
+	import uniqBy from 'lodash.uniqby';
+	import { showError, showSuccess } from 'notifications';
+	import { get } from 'api';
+	import {
+		addMetric,
+		GOAL_REPO_ADD,
+		GOAL_REPO_CLEAR,
+		GOAL_GET_URL
+	} from 'metrics';
+	import RepoInfo from './RepoInfo';
+	import URI from 'urijs';
+
+	const ENTER_KEY = 13;
+
+	function keyEvent(code) {
+		return function(node, callback) {
+			function keydownHandler (event) {
+				if (event.which === code) {
+					callback.call(this, event);
+				}
+			}
+			node.addEventListener('keydown', keydownHandler, false);
+			return {
+				destroy() {
+					node.removeEventListener('keydown', keydownHandler, false);
+				}
+			};
+		};
+	}
+
+	async function getRepoInfo(owner, name) {
+		const result = await get('/api/repo', {
+			params: {
+				owner,
+				name
+			}
+		});
+		return result;
+	}
+
+	const getUrl = function() {
+		const { repos } = this.store.get();
+		const currentUrl = new URI(window.location);
+		const url = currentUrl
+			.query({
+				repos: repos.map((repo) => `${ repo.owner }/${ repo.name }`)
+			})
+			.toString();
+		return url;
+	};
+
+	const updateRepo = async function (owner, name) {
+		const { repos } = this.store.get();
+		const repoIndex = repos.findIndex((repo) => (repo.owner === owner) && (repo.name === name));
+		const repo = repos[repoIndex];
+		if (repoIndex > -1) {
+			const repoInfo = await getRepoInfo(repo.owner, repo.name);
+			const newRepo = {
+				...repo,
+				...repoInfo,
+			};
+			this.store.set({
+				repos: [
+					...repos.slice(0, repoIndex),
+					newRepo,
+					...repos.slice(repoIndex + 1)
+				]
+			});
+		}
+	};
+
+	export default {
+		components: {
+			RepoInfo,
+		},
+		methods: {
+			add(slug) {
+				addMetric(GOAL_REPO_ADD, { slug });
+				const [owner, name] = slug
+					.trim()
+					.split('/')
+					.map((str) => str.trim());
+				if (!owner || !name) {
+					showError('Enter valid github repository owner/name');
+					return;
+				}
+				const repos = uniqBy([
+					...this.store.get().repos,
+					{
+						slug,
+						owner,
+						name,
+						url: `https://github.com/${ owner }/${ name }`
+					}
+				], 'slug');
+				this.store.set({ repos });
+				this.refs.slugInput.value = '';
+				updateRepo.call(this, owner, name);
+			},
+			clear() {
+				addMetric(GOAL_REPO_CLEAR);
+				this.store.set({
+					repos: []
+				});
+			},
+			generateUrl() {
+				const url = getUrl.call(this);
+				addMetric(GOAL_GET_URL, { url });
+				this.set({
+					url
+				});
+			},
+			selectUrl() {
+				this.refs.urlInput.select();
+			},
+			resetUrl() {
+				this.set({
+					url: null
+				});
+			},
+			copyUrl() {
+				this.refs.urlInput.select();
+				document.execCommand('copy');
+				showSuccess('URL copied to the clipboard');
+				this.set({
+					url: null
+				});
+			}
+		},
+		events: {
+			enter: keyEvent(ENTER_KEY),
+		},
+	};
+</script>

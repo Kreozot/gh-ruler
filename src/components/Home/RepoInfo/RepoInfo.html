@@ -1,0 +1,146 @@
+<div class="row">
+	<div class="cell">
+		<a href="{ repo.url }" target="_blank">{ repo.owner }/{ repo.name }</a>
+	</div>
+	<div class="cell">
+		<span class="title">Last update:</span>
+		{ updatedAt }
+	</div>
+	<div class="cell center">
+		<span class="title">Stars:</span>
+		{ stargazers }
+	</div>
+	<div class="cell center">
+		<span class="title">Open issues:</span>
+		{ openIssues }
+	</div>
+	<div class="cell center">
+		<span class="title">Closed issues:</span>
+		{ closedIssues }
+	</div>
+	<div class="cell center">
+		<span class="title">Open PRs:</span>
+		{ openPRs }
+	</div>
+	<div class="cell center">
+		<span class="title">Merged PRs:</span>
+		{ mergedPRs }
+	</div>
+	<div class="cell cell--button">
+		<button on:click="removeElement()" class="remove" title="Remove"></button>
+	</div>
+</div>
+
+<style>
+	.row {
+		display: table-row;
+	}
+
+	.remove {
+		vertical-align: middle;
+		opacity: 0;
+		pointer-events: none;
+		display: inline-block;
+		border: none;
+		padding: 12px;
+		width: 16px;
+		height: 16px;
+		background: url('./remove-icon.svg') 50% 50% no-repeat;
+		background-size: 70%;
+		cursor: pointer;
+	}
+
+	.remove:hover, .remove:focus {
+		background-color: rgb(255, 200, 200);
+	}
+
+	.row:hover .remove, .row:focus-within .remove {
+		opacity: 1;
+		pointer-events: all;
+	}
+
+	.cell {
+		display: table-cell;
+		padding: 10px;
+		vertical-align: middle;
+	}
+
+	.cell--button {
+		padding: 0;
+	}
+
+	.center {
+		text-align: center;
+	}
+
+	.title {
+		display: none;
+	}
+
+	@media (max-width: 760px) {
+		.row, .cell {
+			display: block;
+		}
+
+		.row {
+			margin: 10px;
+		}
+
+		.cell {
+			padding: 0;
+		}
+
+		.title {
+			display: inline-block;
+			font-weight: bold;
+		}
+
+		.center {
+			text-align: left;
+		}
+	}
+</style>
+
+<script>
+	import get from 'lodash.get';
+	import parse from 'date-fns/parse';
+	import format from 'date-fns/format';
+	import distanceInWords from 'date-fns/distance_in_words';
+	import {
+		addMetric,
+		GOAL_REPO_REMOVE,
+	} from 'metrics';
+
+	const nowDate = new Date();
+
+	export default {
+		computed: {
+			updatedAt: ({ repo }) => {
+				if (repo.updatedAt) {
+					const date = parse(repo.updatedAt);
+					const dateStr = format(date, 'YYYY-MM-DD');
+					return `${ dateStr } (${ distanceInWords(date, nowDate) })`;
+				}
+				return '';
+			},
+			stargazers: ({ repo }) => get(repo, 'stargazers.totalCount', ''),
+			openIssues: ({ repo }) => get(repo, 'openIssues.totalCount', ''),
+			closedIssues: ({ repo }) => get(repo, 'closedIssues.totalCount', ''),
+			openPRs: ({ repo }) => get(repo, 'openPRs.totalCount', ''),
+			mergedPRs: ({ repo }) => get(repo, 'mergedPRs.totalCount', ''),
+		},
+		methods: {
+			removeElement() {
+				const { repos } = this.store.get();
+				const { index, repo: { slug } } = this.get();
+				addMetric(GOAL_REPO_REMOVE, { slug });
+				this.store.set({
+					repos: [
+						...repos.slice(0, index),
+						...repos.slice(index + 1),
+					]
+				});
+			}
+		}
+	};
+</script>

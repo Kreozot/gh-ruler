@@ -1,0 +1,79 @@
+html, body {
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+
+body {
+	color: #333;
+	box-sizing: border-box;
+	font-family: Arial, sans-serif;
+}
+
+a {
+	color: rgb(0,100,200);
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:visited {
+	color: rgb(0,80,160);
+}
+
+label {
+	display: block;
+}
+
+input, button, select, textarea {
+	font-family: inherit;
+	font-size: inherit;
+	padding: 0.4em;
+	margin: 0;
+	box-sizing: border-box;
+	border: 1px solid #ccc;
+	border-radius: 2px;
+}
+
+input:disabled {
+	color: #ccc;
+}
+
+input[type="range"] {
+	height: 0;
+}
+
+button {
+	background-color: #f4f4f4;
+	outline: none;
+}
+
+button:active {
+	background-color: #ddd;
+}
+
+button:focus {
+	border-color: #676767;
+}
+
+h1, h2, h3, h4, h5 {
+	margin: 1em 0 0.7em;
+}
+
+h1, h2 {
+	text-align: center;
+}
+
+h3, h4, h5 {
+	text-align: left;
+}
+
+pre[class*="language-"]:before,
+pre[class*="language-"]:after {
+	content: none !important;
+}

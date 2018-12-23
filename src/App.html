@@ -1,0 +1,17 @@
+<Layout>
+	<svelte:component this={$Page}/>
+</Layout>
+
+<script>
+	import Layout from './components/Layout';
+	import router from './router';
+
+	export default {
+		components: {
+			Layout,
+		},
+		oncreate() {
+			router.updatePageLinks();
+		}
+	};
+</script>
