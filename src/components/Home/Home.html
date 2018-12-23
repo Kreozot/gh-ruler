@@ -157,6 +157,7 @@
 		GOAL_GET_URL
 	} from 'metrics';
 	import RepoInfo from './RepoInfo';
+	import sanitizeString from 'sanitizeString';
 	import URI from 'urijs';
 
 	const ENTER_KEY = 13;
@@ -228,7 +229,7 @@
 				const [owner, name] = slug
 					.trim()
 					.split('/')
-					.map((str) => str.trim());
+					.map((str) => sanitizeString(str));
 				if (!owner || !name) {
 					showError('Enter valid github repository owner/name');
 					return;

@@ -1,9 +1,10 @@
 const { query } = require('./graphQL');
+const sanitizeString = require('../sanitizeString');
 
 async function getRepoInfo(owner, name) {
 	const result = await query(`
 		query {
-			repository(owner: "${ owner }", name: "${ name }") {
+			repository(owner: "${ sanitizeString(owner) }", name: "${ sanitizeString(name) }") {
 				url
 				updatedAt
 				stargazers(first: 0) {
@@ -43,7 +44,9 @@ async function getRepoInfo(owner, name) {
 
 async function getReposInfo(repos) {
 	return await Promise.all(repos.map(async (repoSlug) => {
-		const [owner, name] = repoSlug.split('/');
+		const [owner, name] = repoSlug
+			.split('/')
+			.map((text) => sanitizeString(text));
 		return await getRepoInfo(owner, name);
 	}));
 }
