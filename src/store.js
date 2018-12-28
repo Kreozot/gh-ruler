@@ -56,4 +56,47 @@ store.on('state', ({ current }) => {
 	}
 });
 
+export function addRepo(newRepo) {
+	const { repos } = store.get();
+	store.set({
+		repos: uniqBy([
+			...repos,
+			newRepo,
+		], 'slug')
+	});
+}
+
+export function replaceRepo(slug, newRepo) {
+	const { repos } = store.get();
+	const index = repos.findIndex((repo) => (repo.slug === slug));
+	if (index >= 0) {
+		store.set({
+			repos: [
+				...repos.slice(0, index),
+				newRepo,
+				...repos.slice(index + 1),
+			]
+		});
+	}
+}
+
+export function removeRepo(slug) {
+	const { repos } = store.get();
+	const index = repos.findIndex((repo) => (repo.slug === slug));
+	if (index >= 0) {
+		store.set({
+			repos: [
+				...repos.slice(0, index),
+				...repos.slice(index + 1),
+			]
+		});
+	}
+}
+
+export function clearRepos() {
+	store.set({
+		repos: []
+	});
+}
+
 export default store;

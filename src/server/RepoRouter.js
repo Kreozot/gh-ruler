@@ -33,7 +33,11 @@ class RepoRouter extends Router {
 			const { owner, name } = req.query;
 			if (owner && name) {
 				const repoInfo = await getRepoInfo(owner, name);
-				res.status(200).send(repoInfo);
+				if (repoInfo) {
+					res.status(200).send(repoInfo);
+				} else {
+					res.status(404).send('Repository not found');
+				}
 			} else {
 				res.status(400).send('Request must have "owner" and "name" params');
 			}

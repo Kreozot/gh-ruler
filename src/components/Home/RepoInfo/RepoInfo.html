@@ -110,6 +110,7 @@
 		addMetric,
 		GOAL_REPO_REMOVE,
 	} from 'metrics';
+	import * as store from 'store';
 
 	const nowDate = new Date();
 
@@ -132,14 +133,9 @@
 		methods: {
 			removeElement() {
 				const { repos } = this.store.get();
-				const { index, repo: { slug } } = this.get();
+				const { repo: { slug } } = this.get();
 				addMetric(GOAL_REPO_REMOVE, { slug });
-				this.store.set({
-					repos: [
-						...repos.slice(0, index),
-						...repos.slice(index + 1),
-					]
-				});
+				store.removeRepo(slug);
 			}
 		}
 	};

@@ -35,7 +35,7 @@
 		</div>
 
 		{#each $repos as repo, i}
-			<RepoInfo repo={ repo } index={ i }/>
+			<RepoInfo repo={ repo } />
 		{/each}
 
 	</div>
@@ -156,6 +156,7 @@
 		GOAL_REPO_CLEAR,
 		GOAL_GET_URL
 	} from 'metrics';
+	import * as store from 'store';
 	import RepoInfo from './RepoInfo';
 	import sanitizeString from 'sanitizeString';
 	import URI from 'urijs';
@@ -199,23 +200,22 @@
 		return url;
 	};
 
-	const updateRepo = async function (owner, name) {
+	const updateRepo = async function (slug) {
 		const { repos } = this.store.get();
-		const repoIndex = repos.findIndex((repo) => (repo.owner === owner) && (repo.name === name));
-		const repo = repos[repoIndex];
-		if (repoIndex > -1) {
-			const repoInfo = await getRepoInfo(repo.owner, repo.name);
-			const newRepo = {
-				...repo,
-				...repoInfo,
-			};
-			this.store.set({
-				repos: [
-					...repos.slice(0, repoIndex),
-					newRepo,
-					...repos.slice(repoIndex + 1)
-				]
-			});
+		const index = repos.findIndex((repo) => repo.slug === slug);
+		const repo = repos[index];
+		if (index > -1) {
+			try {
+				const repoInfo = await getRepoInfo(repo.owner, repo.name);
+				const newRepo = {
+					...repo,
+					...repoInfo,
+				};
+				store.replaceRepo(slug, newRepo);
+			} catch (err) {
+				showError(err.message);
+				store.removeRepo(slug);
+			}
 		}
 	};
 
@@ -234,24 +234,18 @@
 					showError('Enter valid github repository owner/name');
 					return;
 				}
-				const repos = uniqBy([
-					...this.store.get().repos,
-					{
-						slug,
-						owner,
-						name,
-						url: `https://github.com/${ owner }/${ name }`
-					}
-				], 'slug');
-				this.store.set({ repos });
+				store.addRepo({
+					slug,
+					owner,
+					name,
+					url: `https://github.com/${ owner }/${ name }`
+				});
 				this.refs.slugInput.value = '';
-				updateRepo.call(this, owner, name);
+				updateRepo.call(this, slug);
 			},
 			clear() {
 				addMetric(GOAL_REPO_CLEAR);
-				this.store.set({
-					repos: []
-				});
+				store.clearRepos();
 			},
 			generateUrl() {
 				const url = getUrl.call(this);
