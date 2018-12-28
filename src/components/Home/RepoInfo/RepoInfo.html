@@ -132,7 +132,6 @@
 		},
 		methods: {
 			removeElement() {
-				const { repos } = this.store.get();
 				const { repo: { slug } } = this.get();
 				addMetric(GOAL_REPO_REMOVE, { slug });
 				store.removeRepo(slug);

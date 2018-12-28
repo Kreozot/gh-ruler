@@ -1,0 +1,93 @@
+
+<button
+	on:click="generateUrl()"
+	title="Generate URL to share this comparison"
+>
+	Get URL
+</button>
+{#if url}
+	<div class="url-section">
+		<input
+			ref:urlInput
+			on:focus="selectUrl()"
+			on:blur="resetUrl()"
+			value={ url }
+		>
+		<button
+			on:click="copyUrl()"
+			title="Copy URL to clipboard"
+			class="clipboard"
+		>
+		</button>
+	</div>
+{/if}
+
+<style>
+	.url-section {
+		display: flex;
+		align-items: center;
+	}
+
+	.clipboard {
+		display: inline-block;
+		border: none;
+		padding: 12px;
+		width: 16px;
+		height: 16px;
+		background: url('./clipboard-icon.svg') 50% 50% no-repeat;
+		background-size: 70%;
+		cursor: pointer;
+	}
+
+	.clipboard:hover, .clipboard:focus {
+		background-color: rgb(200, 255, 200);
+	}
+</style>
+
+<script>
+	import { showSuccess } from 'notifications';
+	import {
+		addMetric,
+		GOAL_GET_URL
+	} from 'metrics';
+	import URI from 'urijs';
+
+	const getUrl = function(repos) {
+		const currentUrl = new URI(window.location);
+		const url = currentUrl
+			.query({
+				repos: repos.map((repo) => `${ repo.owner }/${ repo.name }`)
+			})
+			.toString();
+		return url;
+	};
+
+	export default {
+		methods: {
+			generateUrl() {
+				const { repos } = this.store.get();
+				const url = getUrl(repos);
+				addMetric(GOAL_GET_URL, { url });
+				this.set({
+					url
+				});
+			},
+			selectUrl() {
+				this.refs.urlInput.select();
+			},
+			resetUrl() {
+				this.set({
+					url: null
+				});
+			},
+			copyUrl() {
+				this.refs.urlInput.select();
+				document.execCommand('copy');
+				showSuccess('URL copied to the clipboard');
+				this.set({
+					url: null
+				});
+			}
+		}
+	};
+</script>

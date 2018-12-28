@@ -48,28 +48,7 @@
 		>
 			Clear
 		</button>
-		<button
-			on:click="generateUrl()"
-			title="Generate URL to share this comparison"
-		>
-			Get URL
-		</button>
-		{#if url}
-			<div class="url-section">
-				<input
-					ref:urlInput
-					on:focus="selectUrl()"
-					on:blur="resetUrl()"
-					value={ url }
-				>
-				<button
-					on:click="copyUrl()"
-					title="Copy URL to clipboard"
-					class="clipboard"
-				>
-				</button>
-			</div>
-		{/if}
+		<GetUrl />
 	</div>
 </div>
 
@@ -100,11 +79,6 @@
 		grid-template-columns: auto auto auto;
 	}
 
-	.url-section {
-		display: flex;
-		align-items: center;
-	}
-
 	.table {
 		display: table;
 		max-width: 100%;
@@ -118,21 +92,6 @@
 	.cell {
 		display: table-cell;
 		padding: 10px;
-	}
-
-	.clipboard {
-		display: inline-block;
-		border: none;
-		padding: 12px;
-		width: 16px;
-		height: 16px;
-		background: url('./clipboard-icon.svg') 50% 50% no-repeat;
-		background-size: 70%;
-		cursor: pointer;
-	}
-
-	.clipboard:hover, .clipboard:focus {
-		background-color: rgb(200, 255, 200);
 	}
 
 	@media (max-width: 760px) {
@@ -158,8 +117,8 @@
 	} from 'metrics';
 	import * as store from 'store';
 	import RepoInfo from './RepoInfo';
+	import GetUrl from './GetUrl';
 	import sanitizeString from 'sanitizeString';
-	import URI from 'urijs';
 
 	const ENTER_KEY = 13;
 
@@ -189,22 +148,10 @@
 		return result;
 	}
 
-	const getUrl = function() {
-		const { repos } = this.store.get();
-		const currentUrl = new URI(window.location);
-		const url = currentUrl
-			.query({
-				repos: repos.map((repo) => `${ repo.owner }/${ repo.name }`)
-			})
-			.toString();
-		return url;
-	};
-
 	const updateRepo = async function (slug) {
 		const { repos } = this.store.get();
-		const index = repos.findIndex((repo) => repo.slug === slug);
-		const repo = repos[index];
-		if (index > -1) {
+		const repo = repos.find((repo) => repo.slug === slug);
+		if (repo) {
 			try {
 				const repoInfo = await getRepoInfo(repo.owner, repo.name);
 				const newRepo = {
@@ -222,12 +169,12 @@
 	export default {
 		components: {
 			RepoInfo,
+			GetUrl,
 		},
 		methods: {
 			add(slug) {
 				addMetric(GOAL_REPO_ADD, { slug });
 				const [owner, name] = slug
-					.trim()
 					.split('/')
 					.map((str) => sanitizeString(str));
 				if (!owner || !name) {
@@ -247,29 +194,6 @@
 				addMetric(GOAL_REPO_CLEAR);
 				store.clearRepos();
 			},
-			generateUrl() {
-				const url = getUrl.call(this);
-				addMetric(GOAL_GET_URL, { url });
-				this.set({
-					url
-				});
-			},
-			selectUrl() {
-				this.refs.urlInput.select();
-			},
-			resetUrl() {
-				this.set({
-					url: null
-				});
-			},
-			copyUrl() {
-				this.refs.urlInput.select();
-				document.execCommand('copy');
-				showSuccess('URL copied to the clipboard');
-				this.set({
-					url: null
-				});
-			}
 		},
 		events: {
 			enter: keyEvent(ENTER_KEY),
