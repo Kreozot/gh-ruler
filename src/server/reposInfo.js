@@ -34,6 +34,9 @@ async function getRepoInfo(owner, name) {
 			}
 		}
 	`);
+	if (!result.data.repository) {
+		return null;
+	}
 	return {
 		...result.data.repository,
 		owner,
