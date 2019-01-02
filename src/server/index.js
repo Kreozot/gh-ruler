@@ -19,6 +19,7 @@ app.use(new RepoRouter());
 
 if (process.env.NODE_ENV === 'production') {
 	app.use(express.static('public'));
+	app.use(express.static('static'));
 }
 
 app.listen(API_PORT, function() {
