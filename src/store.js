@@ -42,7 +42,7 @@ const storeData = {
 const store = new Store(storeData);
 
 async function getReposInfo(repos) {
-	const result = await get('/api/repos', {
+	const result = await get(process.env.API_GET_REPOS, {
 		params: {
 			repos
 		}

@@ -179,7 +179,7 @@
 	}
 
 	async function getRepoInfo(owner, name) {
-		const result = await get('/api/repo', {
+		const result = await get(process.env.API_GET_REPO, {
 			params: {
 				owner,
 				name

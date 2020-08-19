@@ -114,7 +114,7 @@ module.exports = {
 			inject: 'body',
 			favicon: 'src/assets/favicon.png',
 		}),
-		new webpack.EnvironmentPlugin(['NODE_ENV']),
+		new webpack.EnvironmentPlugin(['NODE_ENV', 'API_GET_REPO', 'API_GET_REPOS']),
 	],
 	devtool: prod ? false: 'source-map',
 	devServer: {
