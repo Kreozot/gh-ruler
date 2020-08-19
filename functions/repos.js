@@ -1,9 +1,10 @@
 const { getReposInfo } = require('../src/server/reposInfo');
 
 exports.handler = async function(event) {
-	const { repos } = event.queryStringParameters;
-	if (repos) {
+	const reposStr = event.queryStringParameters['repos[]'];
+	if (reposStr) {
 		try {
+			const repos = reposStr.split(',');
 			const result = await getReposInfo(repos);
 			return {
 				statusCode: 200,
@@ -18,7 +19,7 @@ exports.handler = async function(event) {
 	} else {
 		return {
 			statusCode: 400,
-			body: `Request must have "repos" param. Instead ${ JSON.stringify(event.queryStringParameters) }`,
+			body: 'Request must have "repos" param',
 		};
 	}
 };
