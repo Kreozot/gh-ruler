@@ -18,7 +18,7 @@ exports.handler = async function(event) {
 	} else {
 		return {
 			statusCode: 400,
-			body: `Request must have "repos" param. Instead ${ event.queryStringParameters }`,
+			body: `Request must have "repos" param. Instead ${ JSON.stringify(event.queryStringParameters) }`,
 		};
 	}
 };
