@@ -1,4 +1,4 @@
-const { getRepoInfo } = require('./reposInfo');
+const { getRepoInfo } = require('../src/server/reposInfo');
 
 exports.handler = async function(event, context) {
 	const { owner, name } = JSON.parse(event.body);
