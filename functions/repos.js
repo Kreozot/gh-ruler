@@ -7,7 +7,7 @@ exports.handler = async function(event) {
 			const result = await getReposInfo(repos);
 			return {
 				statusCode: 200,
-				body: result,
+				body: JSON.stringify(result),
 			};
 		} catch(err) {
 			return {
