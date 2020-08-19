@@ -1,7 +1,7 @@
 const { getReposInfo } = require('../src/server/reposInfo');
 
 exports.handler = async function(event, context) {
-	const { repos } = JSON.parse(event.body);
+	const { repos } = event.queryStringParameters;
 	if (repos) {
 		return getReposInfo(repos);
 	} else {
