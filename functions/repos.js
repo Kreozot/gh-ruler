@@ -4,7 +4,11 @@ exports.handler = async function(event) {
 	const { repos } = event.queryStringParameters;
 	if (repos) {
 		try {
-			return await getReposInfo(repos);
+			const result = await getReposInfo(repos);
+			return {
+				statusCode: 200,
+				body: result,
+			};
 		} catch(err) {
 			return {
 				statusCode: 500,

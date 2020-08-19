@@ -4,7 +4,11 @@ exports.handler = async function(event) {
 	const { owner, name } = event.queryStringParameters;
 	if (owner && name) {
 		try {
-			return await getRepoInfo(owner, name);
+			const result = await getRepoInfo(owner, name);
+			return {
+				statusCode: 200,
+				body: result,
+			};
 		} catch(err) {
 			return {
 				statusCode: 500,
